@@ -11,6 +11,8 @@ import type { Question, UserData, VocabularyItem } from './types'
 const questions = questionsJson as Question[]
 type Screen = 'home' | 'learn' | 'practice' | 'exam' | 'vocabulary' | 'settings'
 
+const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+
 function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [user, setUser] = useState<UserData>(loadUserData)
@@ -116,7 +118,7 @@ function StudySession({ mode, questions, user, onRecord, onBack, onWord }: { mod
       <div className="question-meta"><span>{question.state ? `${question.state} · ` : ''}{formatSection(question.section)}</span><span>#{question.number}</span></div>
       <h1 lang="de">{question.germanQuestion}</h1>
       {english && <p className="translation">{question.englishQuestion}</p>}
-      {question.image && <img className="question-image" src={question.image} alt="Visual options for this question" />}
+      {question.image && <img className="question-image" src={assetUrl(question.image)} alt="Visual options for this question" />}
       <div className="answers">
         {question.answers.map((answer, i) => {
           const state = answered ? answer.correct ? 'correct' : selected === i ? 'wrong' : 'muted' : ''
@@ -154,7 +156,7 @@ function Exam({ questions, user, setUser, onBack }: { questions: Question[]; use
     return <div className="page exam-results"><header className="simple-header"><button className="icon-button" onClick={onBack}><X /></button><Brand compact /></header><div className={`result-medal ${passed ? 'passed' : ''}`}>{passed ? <Trophy /> : <Brain />}</div><span className="eyebrow">Exam complete</span><h1>{score} / 33</h1><h2>{passed ? 'You passed this round.' : 'Keep building. You’re getting there.'}</h2><p>{passed ? 'A calm, confident result. Review the misses once more to make it durable.' : `You need ${17 - score} more correct answers to reach the passing score.`}</p><div className="review-list">{queue.filter(q => !q.answers[answers[q.id]]?.correct).map(q => <div key={q.id}><span>#{q.number}</span><div><strong>{q.germanQuestion}</strong><small>{q.answers.find(a => a.correct)?.german}</small></div></div>)}</div><button className="primary-button" onClick={start}>Try another exam <RotateCcw /></button></div>
   }
   const question = queue[index]
-  return <div className="page study-page exam-page"><SessionHeader onBack={onBack} label="Exam mode" progress={(index + 1) / 33} count={`${index + 1} / 33`} /><article className="question-card"><div className="question-meta"><span>{question.state || formatSection(question.section)}</span><span>#{question.number}</span></div><h1 lang="de">{question.germanQuestion}</h1>{question.image && <img className="question-image" src={question.image} alt="Bild zur Prüfungsfrage" />}<div className="answers">{question.answers.map((a, i) => <button className={`answer ${answers[question.id] === i ? 'selected' : ''}`} onClick={() => setAnswers(v => ({ ...v, [question.id]: i }))} key={i}><span className="answer-key">{String.fromCharCode(65 + i)}</span><span className="answer-copy"><strong>{a.german}</strong></span></button>)}</div></article><div className="exam-navigation"><button disabled={index === 0} onClick={() => setIndex(i => i - 1)}><ArrowLeft /> Back</button>{index === 32 ? <button className="primary-button" disabled={answers[question.id] === undefined} onClick={finish}>Finish exam <Check /></button> : <button className="primary-button" disabled={answers[question.id] === undefined} onClick={() => setIndex(i => i + 1)}>Next <ArrowRight /></button>}</div></div>
+  return <div className="page study-page exam-page"><SessionHeader onBack={onBack} label="Exam mode" progress={(index + 1) / 33} count={`${index + 1} / 33`} /><article className="question-card"><div className="question-meta"><span>{question.state || formatSection(question.section)}</span><span>#{question.number}</span></div><h1 lang="de">{question.germanQuestion}</h1>{question.image && <img className="question-image" src={assetUrl(question.image)} alt="Bild zur Prüfungsfrage" />}<div className="answers">{question.answers.map((a, i) => <button className={`answer ${answers[question.id] === i ? 'selected' : ''}`} onClick={() => setAnswers(v => ({ ...v, [question.id]: i }))} key={i}><span className="answer-key">{String.fromCharCode(65 + i)}</span><span className="answer-copy"><strong>{a.german}</strong></span></button>)}</div></article><div className="exam-navigation"><button disabled={index === 0} onClick={() => setIndex(i => i - 1)}><ArrowLeft /> Back</button>{index === 32 ? <button className="primary-button" disabled={answers[question.id] === undefined} onClick={finish}>Finish exam <Check /></button> : <button className="primary-button" disabled={answers[question.id] === undefined} onClick={() => setIndex(i => i + 1)}>Next <ArrowRight /></button>}</div></div>
 }
 
 function Vocabulary({ user, questions, onBack, setUser }: { user: UserData; questions: Question[]; onBack: () => void; setUser: React.Dispatch<React.SetStateAction<UserData>> }) {

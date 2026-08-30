@@ -2,6 +2,7 @@ import { readdir, writeFile } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 
 const root = new URL('../dist/', import.meta.url).pathname
+const base = `/${(process.env.VITE_BASE_PATH || '').replace(/^\/+|\/+$/g, '')}${process.env.VITE_BASE_PATH ? '/' : ''}`
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -11,7 +12,7 @@ async function walk(directory) {
 
 const assets = (await walk(root))
   .filter(file => !file.endsWith('/sw.js'))
-  .map(file => `/${relative(root, file).split(sep).join('/')}`)
+  .map(file => `${base}${relative(root, file).split(sep).join('/')}`)
   .sort()
 
 const source = `const CACHE = 'einfach-deutschland-v1';
@@ -23,7 +24,7 @@ self.addEventListener('fetch', event => {
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
     if (response.ok && new URL(event.request.url).origin === self.location.origin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
     return response;
-  }).catch(() => event.request.mode === 'navigate' ? caches.match('/index.html') : Response.error())));
+  }).catch(() => event.request.mode === 'navigate' ? caches.match('${base}index.html') : Response.error())));
 });
 `
 
