@@ -57,32 +57,47 @@ function Dashboard({ user, questions, onNavigate, filter, setFilter }: { user: U
   const learned = Object.keys(user.progress).length
   const due = Object.values(user.progress).filter(p => new Date(p.due) <= new Date()).length
   const progress = Math.round(mastered / 310 * 100)
+  const returning = learned > 0 || user.exams.length > 0 || user.difficultWords.length > 0 || Boolean(user.lastStudyDate)
   const weakest = Object.entries(user.progress).sort(([, a], [, b]) => (b.wrong - b.correct) - (a.wrong - a.correct)).slice(0, 3).map(([id]) => questions.find(q => q.id === id)?.section).filter(Boolean)
   return <div className="page dashboard">
     <header className="topbar"><Brand /><button className="icon-button" onClick={() => onNavigate('settings')} aria-label="Settings"><Settings size={20} /></button></header>
-    <section className="hero">
-      <div><span className="eyebrow">Guten Tag, Madison</span><h1>Ready for a little<br /><em>Deutsch?</em></h1><p>Small steps, strong memory. Your next review is ready.</p></div>
+    {returning ? <section className="hero">
+      <div><span className="eyebrow">Welcome back</span><h1>Ready for a little<br /><em>Deutsch?</em></h1><p>{due ? `${due} questions are ready to review.` : 'Keep building confidence with your next study session.'}</p><button className="primary-button hero-button" onClick={() => onNavigate('learn')}>Continue studying <ArrowRight size={18} /></button></div>
       <div className="hero-orbit" aria-hidden="true"><span>GUT</span><div>{progress}%</div><small>exam ready</small></div>
-    </section>
-    <div className="filter-row" aria-label="Question filter">
-      {([['bavaria', 'Munich mix'], ['general', 'All Germany'], ['all', 'Full catalogue']] as const).map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{label}</button>)}
+    </section> : <>
+      <section className="hero newcomer-hero">
+        <div><span className="eyebrow">German citizenship test trainer</span><h1>Prepare for the<br /><em>Einbürgerungstest.</em></h1><p>Learn the official questions with English translations, clear explanations, and practice that adapts to your progress.</p><button className="primary-button hero-button" onClick={() => onNavigate('learn')}>Start learning <ArrowRight size={18} /></button><div className="trust-line"><span>Official BAMF catalogue</span><span>Free to use</span><span>Works offline</span></div></div>
+        <div className="hero-orbit catalogue-orbit" aria-hidden="true"><span>COMPLETE</span><div>{questions.length}</div><small>questions</small></div>
+      </section>
+      <section className="getting-started" aria-labelledby="getting-started-title">
+        <div className="section-heading"><div><span className="eyebrow">A clear path</span><h2 id="getting-started-title">How it works</h2></div></div>
+        <div className="steps-grid">
+          <div><span>1</span><BookOpen /><h3>Learn with context</h3><p>Understand each question with English translations and explanations.</p></div>
+          <div><span>2</span><Brain /><h3>Practice what’s difficult</h3><p>Questions return based on your answers, so review stays focused.</p></div>
+          <div><span>3</span><GraduationCap /><h3>Check your readiness</h3><p>Use realistic 33-question simulations when you feel prepared.</p></div>
+        </div>
+      </section>
+    </>}
+    <div className="question-set"><span>Question set</span><div className="filter-row" aria-label="Question set">
+      {([['bavaria', 'Bavaria mix'], ['general', 'General only'], ['all', 'All states']] as const).map(([value, label]) => <button key={value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{label}</button>)}
     </div>
-    <section className="stats-grid">
+    </div>
+    {returning && <section className="stats-grid">
       <Stat icon={<Target />} value={`${mastered}`} label="Mastered" tone="sage" />
       <Stat icon={<Flame />} value={`${user.streak}`} label="Day streak" tone="amber" />
       <Stat icon={<RotateCcw />} value={`${due || Math.max(0, 12 - learned)}`} label="Due today" tone="blue" />
-    </section>
-    <section className="section-heading"><div><span className="eyebrow">Choose your pace</span><h2>Study modes</h2></div><span className="quiet">{learned} seen</span></section>
+    </section>}
+    <section className="section-heading modes-heading"><div><span className="eyebrow">{returning ? 'Choose your pace' : 'Everything you need'}</span><h2>{returning ? 'Study modes' : 'Choose how to study'}</h2></div>{returning && <span className="quiet">{learned} seen</span>}</section>
     <div className="mode-grid">
       <ModeCard featured icon={<Sparkles />} title="Learn with context" subtitle="German + English" detail="Build meaning, not just memory." action="Start learning" onClick={() => onNavigate('learn')} />
       <ModeCard icon={<Brain />} title="German practice" subtitle="Hints when you need them" detail="Try first. Reveal help later." action="Practice" onClick={() => onNavigate('practice')} />
       <ModeCard icon={<GraduationCap />} title="Exam simulation" subtitle="33 questions · German only" detail="Real format, calm surroundings." action="Take an exam" onClick={() => onNavigate('exam')} />
       <ModeCard icon={<Languages />} title="Vocabulary deck" subtitle={`${user.difficultWords.length} saved words`} detail="Review the language behind the test." action="Open deck" onClick={() => onNavigate('vocabulary')} />
     </div>
-    <section className="progress-panel">
+    {returning && <section className="progress-panel">
       <div className="progress-copy"><span className="eyebrow">Your path</span><h2>{mastered ? `${mastered} questions truly learned` : 'Your first milestone is close'}</h2><p>{weakest.length ? `Focus next: ${[...new Set(weakest)].map(x => formatSection(x!)).join(', ')}.` : 'Answer a few questions and your weak topics will appear here.'}</p></div>
       <div className="progress-ring" style={{ '--progress': `${Math.max(progress, 2) * 3.6}deg` } as React.CSSProperties}><span>{progress}%</span></div>
-    </section>
+    </section>}
     <footer className="source-note">Based on the official BAMF catalogue · 460 questions · Updated 2025</footer>
   </div>
 }
